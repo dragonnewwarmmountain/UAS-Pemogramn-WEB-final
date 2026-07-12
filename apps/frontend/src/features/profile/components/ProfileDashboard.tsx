@@ -48,7 +48,7 @@ export function ProfileDashboard({
     setIsLoading(true);
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      const res = await fetch(`http://localhost:8000/api/tasks`, {
+      const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -97,7 +97,7 @@ export function ProfileDashboard({
       })) || [];
 
       // 3. Dispatch the payload: passing an empty attachments array triggers backend purge
-      await fetch(`http://localhost:8000/api/tasks/${taskId}`, {
+      await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

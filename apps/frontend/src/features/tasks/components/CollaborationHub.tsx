@@ -114,7 +114,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     if (!silent) setIsSyncing(true);
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      const res = await fetch(`http://localhost:8000/api/tasks`, {
+      const res = await fetch(`https://backend-uas-sable.vercel.app/api`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -225,7 +225,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      const res = await fetch(`http://localhost:8000/api/tasks/${activeProject.id}/subtasks`, {
+      const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${activeProject.id}/subtasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ title, assigneeId })

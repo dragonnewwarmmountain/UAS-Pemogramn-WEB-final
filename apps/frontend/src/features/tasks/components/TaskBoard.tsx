@@ -346,7 +346,7 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
 
     const token = localStorage.getItem('hub_jwt_token');
     try {
-      const res = await fetch(`http://localhost:8000/api/tasks/${repoTaskId}/attachments`, {
+      const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${repoTaskId}/attachments`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData 
@@ -388,7 +388,7 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
 
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      await fetch(`http://localhost:8000/api/tasks/${taskId}`, {
+      await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ attachments: updatedAttachments })
