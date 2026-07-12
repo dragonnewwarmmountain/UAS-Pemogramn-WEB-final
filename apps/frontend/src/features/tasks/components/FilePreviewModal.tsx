@@ -1,6 +1,7 @@
 // apps/frontend/src/features/tasks/components/FilePreviewModal.tsx
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import mammoth from 'mammoth';
 
 export interface Attachment {
   id: string;
@@ -32,16 +33,49 @@ const glassyPanelStyle: React.CSSProperties = {
 
 export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [docxHtml, setDocxHtml] = useState<string>('');
+
+  const url = file?.fileUrl || file?.url || '';
+  const extension = (file?.fileName.split('.').pop() || '').toLowerCase();
+  
+  const isDocx = ['doc', 'docx'].includes(extension);
 
   useEffect(() => {
     if (file) setIsLoading(true);
-  }, [file]);
+    setDocxHtml('');
+
+    if (file && isDocx) {
+      const fetchDocx = async () => {
+        try {
+          let arrayBuffer: ArrayBuffer;
+          if (url.startsWith('data:')) {
+            const base64 = url.split(',')[1];
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+               bytes[i] = binaryString.charCodeAt(i);
+            }
+            arrayBuffer = bytes.buffer;
+          } else {
+            const response = await fetch(url);
+            arrayBuffer = await response.arrayBuffer();
+          }
+          
+          const result = await mammoth.convertToHtml({ arrayBuffer });
+          setDocxHtml(result.value);
+          setIsLoading(false);
+        } catch (e) {
+          console.error("Mammoth docx parse error", e);
+          setDocxHtml('<div style="padding: 20px; color: red;">Failed to preview document. It might not be a valid DOCX file.</div>');
+          setIsLoading(false);
+        }
+      };
+      fetchDocx();
+    }
+  }, [file, url, extension, isDocx]);
 
   if (!file) return null;
-
-  const url = file.fileUrl || file.url || '';
-  // Ekstraksi ekstensi fail secara aman
-  const extension = (file.fileName.split('.').pop() || '').toLowerCase();
 
   // ==========================================
   // EXTENSION ROUTING LOGIC
@@ -49,7 +83,7 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
   const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension);
   const isVideo = ['mp4', 'webm', 'ogg'].includes(extension);
   const isPdf = extension === 'pdf';
-  const isOffice = ['doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'].includes(extension);
+  const isOtherOffice = ['ppt', 'pptx', 'xls', 'xlsx'].includes(extension);
 
   const renderContent = () => {
     // 1. NATIVE IMAGE RENDERER
@@ -92,8 +126,25 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
       );
     }
     
-    // 4. OFFICE FILE VIEWER WRAPPER
-    if (isOffice) {
+    // 4. MAMMOTH DOCX RENDERER
+    if (isDocx) {
+      return (
+        <div style={{ flexGrow: 1, overflowY: 'auto', background: '#ffffff', padding: '40px', color: '#000000' }}>
+          {isLoading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+              <div style={{ width: '40px', height: '40px', border: '4px solid #bc69ff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <span style={{ color: '#1e1b4b', fontWeight: '900', fontSize: '0.9rem' }}>Parsing Document...</span>
+              <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+            </div>
+          ) : (
+            <div className="docx-viewer-content" dangerouslySetInnerHTML={{ __html: docxHtml }} />
+          )}
+        </div>
+      );
+    }
+    
+    // 5. OTHER OFFICE VIEWER WRAPPER (WILL LIKELY FAIL FOR BASE64 BUT STILL HERE JUST IN CASE)
+    if (isOtherOffice) {
       const officeViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
       return (
         <div style={{ flexGrow: 1, display: 'flex', background: '#e5e5e5', position: 'relative' }}>
@@ -114,7 +165,7 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
       );
     }
     
-    // 5. THE ULTIMATE FALLBACK UI (For .zip, .rar, etc.)
+    // 6. THE ULTIMATE FALLBACK UI (For .zip, .rar, etc.)
     return (
       <div style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(10, 5, 20, 0.9)', gap: '24px' }}>
         <div style={{ fontSize: '5rem', filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.5))' }}>📁</div>
