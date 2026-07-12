@@ -1,59 +1,43 @@
-
+// apps/backend/src/index.ts
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import { neon } from '@neondatabase/serverless';
-import { PrismaNeon } from '@prisma/adapter-neon'; // <-- UDAH DIGANTI JADI KAPITAL
+import { PrismaNeon } from '@prisma/adapter-neon'; 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import multer from 'multer';
-import fs from 'fs';
-import path from 'path';
 
 const app = express();
 
 // ==========================================
 // Database & Adapter Initialisation
 // ==========================================
-
 const sql = neon(process.env.DATABASE_URL as string);
 const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
-const PORT = process.env.PORT || 8000;
 const JWT_SECRET = process.env.JWT_SECRET || 'enterprise-secure-key-2026';
 
 // ==========================================
-// Middleware & Static File Configuration
+// Middleware
 // ==========================================
 app.use(cors());
-
-app.use(express.json());
-
-// Mengekspos direktori 'uploads' agar file fisik bisa diakses melalui URL
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Tingkatkan limit JSON untuk mengakomodasi Base64 File
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // ==========================================
-// MULTER (PHYSICAL FILE UPLOAD ENGINE)
+// VERCEL COMPATIBLE MULTER (MEMORY STORAGE)
+// Mengubah file fisik menjadi memori agar tidak diblokir Vercel
 // ==========================================
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    // Menghasilkan nama file yang unik untuk mencegah konflik
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+const storage = multer.memoryStorage();
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 } // Batas Vercel payload aman: 5MB
 });
-
-const upload = multer({ storage: storage });
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -213,9 +197,6 @@ app.get('/api/collab/members/:taskId', authenticateToken, async (req: Authentica
   }
 });
 
-// ==========================================
-// DESTRUCTIVE PROTOCOL: HARD LEAVE TEAM
-// ==========================================
 app.delete('/api/collab/leave/:taskId', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const taskId = req.params.taskId;
@@ -232,7 +213,6 @@ app.delete('/api/collab/leave/:taskId', authenticateToken, async (req: Authentic
     await (prisma as any).taskMember.deleteMany({ where: { taskId, userId } });
     res.status(200).json({ message: 'Personnel record purged successfully.' });
   } catch (error) {
-    console.error('[LEAVE TEAM ERROR]:', error);
     res.status(500).json({ error: 'Internal deployment failure.' });
   }
 });
@@ -277,7 +257,6 @@ app.post('/api/tasks', authenticateToken, async (req: AuthenticatedRequest, res:
     const { title, description, dueDate, status, isSequential, isCollab, initialSubTasks, assigneeId, sharedWorkspaceUrl } = req.body;
     const userId = req.user!.id; 
     
-    // Konfigurasi Matriks Lanjutan
     const taskData: any = {
       title, description, difficultySp: 1, 
       dueDate: dueDate ? new Date(dueDate) : null, status: status || 'todo',
@@ -286,7 +265,6 @@ app.post('/api/tasks', authenticateToken, async (req: AuthenticatedRequest, res:
       subTasks: { create: initialSubTasks?.map((subTitle: string) => ({ title: subTitle, isCompleted: false, assigneeId: userId })) || [] }
     };
 
-    // Injeksi Otomatis Shared Workspace URL
     if (sharedWorkspaceUrl) {
       taskData.attachments = {
         create: [{ fileName: 'Shared Workspace Node', fileUrl: sharedWorkspaceUrl, fileType: 'shared_workspace' }]
@@ -319,9 +297,6 @@ app.post('/api/tasks/:id/comments', authenticateToken, async (req: Authenticated
   }
 });
 
-// ==========================================
-// STRICT SERVER-SIDE RBAC ENDPOINTS
-// ==========================================
 app.post('/api/tasks/:id/subtasks', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const taskId = req.params.id;
@@ -388,26 +363,26 @@ app.put('/api/subtasks/:id', authenticateToken, async (req: AuthenticatedRequest
 });
 
 // ==========================================
-// PHYSICAL FILE INJECTION (MULTER MIDDLEWARE)
+// VERCEL MAGIC: BASE64 FILE INJECTION
 // ==========================================
 app.post('/api/tasks/:id/attachments', authenticateToken, upload.single('file'), async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const taskId = req.params.id;
     const userId = req.user!.id;
     
-    // Mengekstrak parameter dari multipart/form-data
     const { fileType } = req.body;
     let fileName = req.body.fileName;
-    let fileUrl = req.body.fileUrl; // Jika menggunakan fallback URL alih-alih berkas fisik
+    let fileUrl = req.body.fileUrl; 
 
-    // Jika berkas fisik ditangkap oleh Multer
+    // VERCEL PATCH: Konversi file Buffer menjadi Base64 string agar bisa disimpan di Neon DB langsung
     if (req.file) {
       fileName = fileName || req.file.originalname;
-      fileUrl = `http://localhost:${PORT}/uploads/${req.file.filename}`;
+      const base64Data = req.file.buffer.toString('base64');
+      fileUrl = `data:${req.file.mimetype};base64,${base64Data}`;
     }
 
     if (!fileName || !fileUrl) {
-      res.status(400).json({ error: 'File entity or URL protocol missing.' });
+      res.status(400).json({ error: 'File entity missing.' });
       return;
     }
 
@@ -424,14 +399,12 @@ app.post('/api/tasks/:id/attachments', authenticateToken, upload.single('file'),
       return;
     }
 
-    // MAIN FILE SUBMISSION RESTRICTION & AUTO-AUDIT TRAIL
     if (fileType === 'main_submission') {
       if (myRole !== 'admin') {
         res.status(403).json({ error: 'Server RBAC Denial: Only Administrators can submit the final deliverable.' });
         return;
       }
       
-      // Auto-Audit Trail: Inject system message directly into Live Discussions
       await (prisma as any).comment.create({
         data: { text: `[SYSTEM_AUDIT] Administrator ${myDisplayName} has uploaded the final deliverable: ${fileName}`, taskId, userId }
       });
@@ -448,7 +421,7 @@ app.post('/api/tasks/:id/attachments', authenticateToken, upload.single('file'),
 });
 
 // ==========================================
-// DESTRUCTIVE PROTOCOLS (DELETE & SAFE ARCHIVE PUT)
+// DESTRUCTIVE PROTOCOLS
 // ==========================================
 app.delete('/api/tasks/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
@@ -541,9 +514,5 @@ app.put('/api/subtasks/:id/status', authenticateToken, async (req: Authenticated
     res.status(500).json({ error: 'Subtask compilation exception.' });
   }
 });
-
-// ==========================================
-// INIT PELADEN
-// ==========================================
 
 export default app;
