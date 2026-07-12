@@ -2,7 +2,6 @@
 
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
   // Tidak ada lagi deklarasi 'output' di sini. 
   // Prisma Client akan otomatis di-generate ke node_modules/@prisma/client
 }
