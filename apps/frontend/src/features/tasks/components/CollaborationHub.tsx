@@ -111,11 +111,19 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
       if (!res.ok) throw new Error('Network anomaly detected.');
       const allTasks = await res.json();
       
-      const collabTasks = allTasks.filter((t: any) => 
-        (t.isCollab === true || (t.members && t.members.length > 0)) && 
-        !t.isArchived && 
-        t.status !== 'done'
-      );
+      const collabTasks = allTasks.filter((t: any) => {
+  // 1. Ensure the task is structurally a collaboration task
+  const isCollabStructure = t.isCollab === true || (t.members && t.members.length > 0);
+  
+  // 2. Strict Check: You must either be the Owner OR currently be in the members list
+  const isUserAssociated = t.ownerId === currentUser.id || 
+    (t.members && t.members.some((m: any) => m.userId === currentUser.id));
+
+  // 3. Lifecycle Check: Task must not be completed or archived
+  const isActive = !t.isArchived && t.status !== 'done';
+
+  return isCollabStructure && isUserAssociated && isActive;
+});
       setTasks(collabTasks);
     } catch (err) {
       console.error('Data synchronisation error:', err);
