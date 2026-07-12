@@ -3,7 +3,6 @@ import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -17,8 +16,8 @@ const app = express();
 // Database & Adapter Initialisation
 // ==========================================
 const dbUrl = (process.env.DATABASE_URL as string).replace('mysql://', 'mariadb://');
-const adapter = new PrismaMariaDb(dbUrl);
-const prisma = new PrismaClient({ adapter });
+
+const prisma = new PrismaClient({ });
 
 const PORT = process.env.PORT || 8000;
 const JWT_SECRET = process.env.JWT_SECRET || 'enterprise-secure-key-2026';
