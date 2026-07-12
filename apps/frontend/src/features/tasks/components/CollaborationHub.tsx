@@ -68,7 +68,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
   const [membersData, setMembersData] = useState<any>(null);
   
   const [activeTab, setActiveTab] = useState<'chat' | 'stages' | 'files'>('chat');
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+  const [, setIsSyncing] = useState<boolean>(false);
 
   // Preview & Accordion State
   const [previewFile, setPreviewFile] = useState<any>(null);

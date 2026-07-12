@@ -615,8 +615,6 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
                 }}
               >
                 {processedTasks.map(t => {
-                  const completedSubs = t.subTasks?.filter(st => st.isCompleted).length || 0;
-                  const totalSubs = t.subTasks?.length || 0;
                   const deadlineInfo = getDeadlineStatus(t.dueDate, t.isCompleted);
                   const prioMatch = (t.description || '').match(/\[Prioritas: (.*?)\]/);
                   const priorityStr = prioMatch ? prioMatch[1] : 'Medium';

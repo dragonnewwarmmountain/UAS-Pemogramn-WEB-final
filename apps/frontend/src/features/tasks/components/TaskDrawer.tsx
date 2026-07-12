@@ -188,13 +188,13 @@ export function TaskDrawer({ task, isOpen, onClose, onUpdateTask, onPreviewFile 
     setNewSubTaskTitle('');
   };
 
-  const toggleSubTask = (taskId: string, subTaskId: string) => {
+  const toggleSubTask = (_taskId: string, subTaskId: string) => {
     if (!task) return;
     const updatedSubs = (task.subTasks || []).map(sub => sub.id === subTaskId ? { ...sub, isCompleted: !sub.isCompleted } : sub);
     onUpdateTask({ ...task, subTasks: updatedSubs });
   };
 
-  const deleteSubTask = (taskId: string, subTaskId: string) => {
+  const deleteSubTask = (_taskId: string, subTaskId: string) => {
     if (!task) return;
     const filteredSubs = (task.subTasks || []).filter(sub => sub.id !== subTaskId);
     onUpdateTask({ ...task, subTasks: filteredSubs });
