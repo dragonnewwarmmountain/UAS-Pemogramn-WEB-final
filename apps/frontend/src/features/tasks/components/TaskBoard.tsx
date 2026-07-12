@@ -27,7 +27,6 @@ export type ExtendedTask = Omit<BaseTask, 'priority' | 'difficulty' | 'status'> 
 
 const PLACEHOLDER_STAT_1 = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=80";
 const PLACEHOLDER_STAT_2 = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&auto=format&fit=crop&q=80";
-const PLACEHOLDER_STAT_3 = "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
 
 const PRIORITY_WEIGHT: Record<PriorityLevel, number> = {
   critical: 4,
