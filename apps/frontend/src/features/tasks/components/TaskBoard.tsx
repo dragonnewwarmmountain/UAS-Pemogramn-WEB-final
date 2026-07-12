@@ -537,9 +537,7 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
       <CreateTaskModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onAddTask={handleAddTask as any} />
 
       {/* SYMMETRICAL 3-PILLAR STATS */}
-     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
-        
-        {/* PILLAR 1: ACTIVE NODES */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
         <div style={{ ...glassyPanelStyle, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', flexGrow: 1 }}>
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -552,7 +550,6 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
           </div>
         </div>
 
-        {/* PILLAR 2: CRITICAL THREATS */}
         <div style={{ ...glassyPanelStyle, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', flexGrow: 1 }}>
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
