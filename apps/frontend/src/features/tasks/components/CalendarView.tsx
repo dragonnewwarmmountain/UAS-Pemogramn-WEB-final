@@ -1,5 +1,5 @@
 // apps/frontend/src/features/tasks/components/CalendarView.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { Task } from '../types';
 import { api } from '../../../services/api';
 
@@ -51,31 +51,6 @@ export function CalendarView() {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const resetToToday = () => setCurrentDate(new Date());
-
-  const toggleTask = async (taskId: string, e: React.MouseEvent<HTMLDivElement>) => {
-    e.stopPropagation();
-    const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
-
-    if (!task.isCompleted && task.subTasks && task.subTasks.length > 0) {
-      const areAllSubsCompleted = task.subTasks.every(sub => sub.isCompleted);
-      if (!areAllSubsCompleted) {
-        alert("Dependency Lock: Complete all sub-tasks in the board view first.");
-        return;
-      }
-    }
-
-    const newState = !task.isCompleted;
-    const newStatus = newState ? 'done' : 'in-progress';
-
-    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: newState, status: newStatus as any } : t));
-
-    try {
-      await api.updateTaskStatus(taskId, newStatus as any);
-    } catch {
-      console.warn("Background synchronisation pending.");
-    }
-  };
 
   // Shared Y2K Glossy Styles
   const glassyPanelStyle = {
@@ -173,24 +148,20 @@ export function CalendarView() {
           {dayTasks.map(task => (
             <div 
               key={task.id} 
-              onClick={(e) => toggleTask(task.id, e)} 
               title={task.title}
               style={{ 
                 fontSize: '0.8rem', 
                 fontWeight: '800',
                 padding: '6px 12px', 
-                backgroundColor: task.isCompleted ? 'rgba(255,255,255,0.8)' : '#1e1b4b', 
-                background: task.isCompleted ? 'rgba(255,255,255,0.8)' : 'linear-gradient(90deg, #1e1b4b 0%, #312e81 100%)',
-                color: task.isCompleted ? '#6b21a8' : '#ffffff', 
+                backgroundColor: '#1e1b4b', 
+                background: 'linear-gradient(90deg, #1e1b4b 0%, #312e81 100%)',
+                color: '#ffffff', 
                 borderRadius: '99px', 
-                border: task.isCompleted ? '1px solid rgba(107,33,168,0.2)' : 'none',
-                boxShadow: task.isCompleted ? 'none' : '0 2px 6px rgba(15, 23, 42, 0.2)',
-                cursor: 'pointer', 
-                textDecoration: task.isCompleted ? 'line-through' : 'none', 
+                border: 'none',
+                boxShadow: '0 2px 6px rgba(15, 23, 42, 0.2)',
                 whiteSpace: 'nowrap', 
                 overflow: 'hidden', 
                 textOverflow: 'ellipsis',
-                transition: 'opacity 0.2s ease'
               }}
             >
               {task.title}
