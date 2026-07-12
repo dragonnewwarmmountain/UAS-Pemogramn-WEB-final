@@ -92,15 +92,15 @@ export function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
       );
     }
     
-    // 4. MICROSOFT OFFICE API WRAPPER
+    // 4. OFFICE FILE VIEWER WRAPPER
     if (isOffice) {
-      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+      const officeViewerUrl = `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
       return (
         <div style={{ flexGrow: 1, display: 'flex', background: '#e5e5e5', position: 'relative' }}>
           {isLoading && (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center', justifyContent: 'center', background: '#f3f4f6', zIndex: 10 }}>
               <div style={{ width: '40px', height: '40px', border: '4px solid #bc69ff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-              <span style={{ color: '#1e1b4b', fontWeight: '900', fontSize: '0.9rem' }}>Connecting to Microsoft Office API...</span>
+              <span style={{ color: '#1e1b4b', fontWeight: '900', fontSize: '0.9rem' }}>Connecting to Document API...</span>
               <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
             </div>
           )}
