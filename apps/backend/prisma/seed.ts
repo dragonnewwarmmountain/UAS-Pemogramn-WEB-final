@@ -1,14 +1,13 @@
 // apps/backend/prisma/seed.ts
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+
 
 // 1. Dynamically swap the protocol from mysql:// to mariadb://
 const dbUrl = (process.env.DATABASE_URL as string).replace('mysql://', 'mariadb://');
 
 // 2. Pass the URL string directly.
-const adapter = new PrismaMariaDb(dbUrl);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient({  });
 
 async function main() {
   // Clear existing data to avoid duplicates
@@ -47,7 +46,7 @@ async function main() {
       subTasks: {
         create: [
           { title: 'Setup Express & CORS', isCompleted: true },
-          { title: 'Create GET /tasks route', assignedUserId: developer.id },
+          { title: 'Create GET /tasks route', assigneeId: developer.id },
           { title: 'Create PUT /tasks/:id route' },
         ],
       },
