@@ -1,8 +1,10 @@
-// apps/backend/src/index.ts
+
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import { neon } from '@neondatabase/serverless';
+import { PrismaNeon } from '@prisma/adapter-neon'; // <-- UDAH DIGANTI JADI KAPITAL
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
@@ -16,7 +18,9 @@ const app = express();
 // Database & Adapter Initialisation
 // ==========================================
 
-const prisma = new PrismaClient({ });
+const sql = neon(process.env.DATABASE_URL as string);
+const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL });
+const prisma = new PrismaClient({ adapter });
 
 const PORT = process.env.PORT || 8000;
 const JWT_SECRET = process.env.JWT_SECRET || 'enterprise-secure-key-2026';
@@ -24,11 +28,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'enterprise-secure-key-2026';
 // ==========================================
 // Middleware & Static File Configuration
 // ==========================================
-app.use(cors({
-  origin: 'http://localhost:5173', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
+app.use(cors());
 
 app.use(express.json());
 
