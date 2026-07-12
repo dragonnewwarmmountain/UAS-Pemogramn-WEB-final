@@ -114,7 +114,7 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
             fontStyle: 'normal',
             fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
           }}>
-            {isLogin ? 'Authentication Gateway' : 'System Initialisation'}
+            {isLogin ? 'Authentication' : 'System Initialisation'}
           </h1>
         </div>
 
@@ -193,7 +193,7 @@ export function AuthScreen({ onAuthenticate }: AuthScreenProps) {
 
         {/* System Toggle */}
         <div style={{ zIndex: 2, marginTop: '28px', color: '#a1a1aa', fontSize: '0.85rem', fontWeight: 'normal', textAlign: 'center', fontStyle: 'normal', fontFamily: "'Segoe UI', Roboto, sans-serif" }}>
-          {isLogin ? "Need an account? " : "Credentials already registered? "}
+          {isLogin ? "Need an account? " : "Already registered? "}
           <button 
             type="button"
             onClick={() => { setIsLogin(!isLogin); setError(''); }}
