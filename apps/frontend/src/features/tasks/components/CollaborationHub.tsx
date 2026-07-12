@@ -8,6 +8,9 @@ interface CollaborationHubProps {
   currentUser: { id: string; email: string; displayName: string };
 }
 
+// ==========================================
+// AESTHETIC STYLES (FUTURISTIC GLASSMORPHISM)
+// ==========================================
 const textGlow = '0px 1px 3px rgba(0,0,0,0.6), 0px 2px 6px rgba(0,0,0,0.4)';
 
 const glassyPanelStyle: React.CSSProperties = {
@@ -67,9 +70,11 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
   const [activeTab, setActiveTab] = useState<'chat' | 'stages' | 'files'>('chat');
   const [, setIsSyncing] = useState<boolean>(false);
 
+  // Preview & Accordion State
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState<boolean>(false);
 
+  // Chat & Stage Inputs
   const [chatMessage, setChatMessage] = useState<string>('');
   const [newStageTitle, setNewStageTitle] = useState<string>('');
   const [newStageAssignee, setNewStageAssignee] = useState<string>(currentUser.id); 
@@ -77,8 +82,10 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
   const [activeAttachStageId, setActiveAttachStageId] = useState<string | null>(null);
   const [stageFile, setStageFile] = useState<File | null>(null);
 
+  // Main Submission Inputs
   const [mainFile, setMainFile] = useState<File | null>(null);
 
+  // Modals States
   const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
   const [inviteEmail, setInviteEmail] = useState<string>('');
   const [inviteRole, setInviteRole] = useState<string>('editor');
@@ -91,6 +98,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
   const [newSharedUrl, setNewSharedUrl] = useState<string>('');
   
   const [taskLoading, setTaskLoading] = useState<boolean>(false);
+
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'warning' | 'error' } | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -99,12 +107,14 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     setTimeout(() => setToast(null), 4000);
   }, []);
 
+  // ==========================================
+  // DIRECT NETWORK FETCH
+  // ==========================================
   const fetchWorkspaceData = useCallback(async (silent = false) => {
     if (!silent) setIsSyncing(true);
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
-      const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks`, {
+      const res = await fetch(`https://backend-uas-sable.vercel.app/api`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -148,6 +158,9 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     }
   }, [tasks, activeTab, selectedProjectId]);
 
+  // ==========================================
+  // MULTI-TIERED ALGORITHMIC SORTING
+  // ==========================================
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
       const getStatusWeight = (status: string) => {
@@ -174,6 +187,9 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
 
   const activeProject = useMemo(() => sortedTasks.find(t => t.id === selectedProjectId), [sortedTasks, selectedProjectId]);
 
+  // ==========================================
+  // ROLE-BASED ACCESS CONTROL (RBAC) LOGIC
+  // ==========================================
   const isOwner = activeProject?.ownerId === currentUser.id;
   const myMemberRecord = membersData?.members?.find((m: any) => m.userId === currentUser.id);
   const myRole = isOwner ? 'admin' : (myMemberRecord?.role || 'viewer'); 
@@ -184,6 +200,9 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
   const canSubmitMainFile = isOwner || myRole === 'admin';
   const canLeaveWorkspace = !isOwner && myMemberRecord; 
 
+  // ==========================================
+  // COMMAND HANDLERS
+  // ==========================================
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatMessage.trim() || !activeProject) return;
@@ -206,7 +225,6 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
       const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${activeProject.id}/subtasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -240,7 +258,6 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     }
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
       const res = await fetch(`https://backend-uas-sable.vercel.app/api/subtasks/${stageId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -262,7 +279,6 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     formData.append('fileUrl', 'physical-upload'); 
 
     const token = localStorage.getItem('hub_jwt_token');
-    // [ PATCHED ]: VERCEL API
     const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${taskId}/attachments`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
@@ -316,11 +332,11 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
 
     const task = tasks.find(t => t.id === taskId);
     const updatedAttachments = (task?.attachments || []).filter((a: any) => a.id !== attachmentId);
+
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, attachments: updatedAttachments } : t));
 
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
       await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${taskId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -367,7 +383,6 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
       };
 
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
       const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -394,13 +409,15 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     setNewSharedUrl('');
   };
 
+  // ==========================================
+  // SYSTEM DIRECTIVES (ARCHIVE, DELETE, LEAVE)
+  // ==========================================
   const handleMarkAsDone = async () => {
     if (!activeProject || !canDeleteWorkspace) return;
     if (!window.confirm("CONFIRMATION: Seal this collaborative matrix as COMPLETED? It will be archived into the Triumphs ledger.")) return;
     
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
       const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${activeProject.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -422,7 +439,6 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
       const res = await fetch(`https://backend-uas-sable.vercel.app/api/tasks/${activeProject.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -443,7 +459,6 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
     
     try {
       const token = localStorage.getItem('hub_jwt_token');
-      // [ PATCHED ]: VERCEL API
       const res = await fetch(`https://backend-uas-sable.vercel.app/api/collab/leave/${activeProject.id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -467,6 +482,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
         </div>
       )}
 
+      {/* INJEKSI MESIN PRATINJAU DOKUMEN UNIVERSAL */}
       <FilePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
 
       <style>{`
@@ -479,6 +495,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
           filter: invert(1);
           cursor: pointer;
         }
+        /* Custom File Input Styling */
         input[type="file"]::file-selector-button {
           background: rgba(255,255,255,0.1);
           border: 1px solid rgba(255,255,255,0.4);
@@ -492,6 +509,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
           font-family: inherit;
         }
         input[type="file"]::file-selector-button:hover { background: rgba(255,255,255,0.2); }
+
         .card-hover:hover {
           transform: translateY(-6px);
           box-shadow: 0 12px 32px rgba(188, 105, 255, 0.25), inset 1px 1px 2px rgba(255,255,255,0.6);
@@ -504,6 +522,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
         .light-placeholder::placeholder { color: rgba(255, 255, 255, 0.7) !important; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
       `}</style>
 
+      {/* STATE 1: NO PROJECTS AT ALL */}
       {sortedTasks.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '80px', ...glassyPanelStyle, color: '#ffffff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '20px', height: '100%' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: '900', textShadow: textGlow, margin: 0 }}>Welcome to Collaboration Hub</h2>
@@ -514,7 +533,10 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
             + Initialize Workspace
           </button>
         </div>
-      ) : !selectedProjectId ? (
+      ) : 
+
+      // STATE 2: LOBBY GRID VIEW
+      !selectedProjectId ? (
         <div style={{ ...glassyPanelStyle, padding: '40px', height: '100%', overflowY: 'auto', display: 'flex', flexDirection: 'column' }} className="nav-scroll">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
             <div>
@@ -562,8 +584,11 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
           </div>
         </div>
       ) : (
+
+        // STATE 3: 3-PANE WORKSPACE VIEW
         <div style={{ display: 'grid', gridTemplateColumns: '280px minmax(0, 1fr) 300px', gap: '20px', height: '100%' }}>
           
+          {/* LEFT PANEL: NAVIGATOR */}
           <div style={{ ...glassyPanelStyle, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
               <button 
@@ -602,8 +627,10 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
             </div>
           </div>
 
+          {/* MIDDLE PANEL: WORKSPACE CORE */}
           {activeProject && (
             <div style={{ ...glassyPanelStyle, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+              
               <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}>
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                   <span style={{ fontSize: '0.65rem', fontWeight: '900', padding: '4px 10px', borderRadius: '99px', backgroundColor: 'rgba(255,255,255,0.9)', color: '#1e1b4b' }}>
@@ -630,6 +657,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                 </div>
               </div>
 
+              {/* TAB: CHAT */}
               {activeTab === 'chat' && (
                 <div style={{ display: 'flex', flexDirection: 'column', flexGrow: 1, overflow: 'hidden' }}>
                   <div className="nav-scroll" style={{ flexGrow: 1, overflowY: 'auto', padding: '24px 32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -683,8 +711,11 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                 </div>
               )}
 
+              {/* TAB: STAGES (WITH RBAC) */}
               {activeTab === 'stages' && (
                 <div className="nav-scroll" style={{ flexGrow: 1, overflowY: 'auto', padding: '32px' }}>
+                  
+                  {/* CREATE STAGE: Only for Owner/Admin */}
                   {canAddStages && (
                     <form onSubmit={handleAddStage} style={{ display: 'flex', gap: '12px', marginBottom: '24px', flexWrap: 'wrap' }}>
                       <input type="text" className="futuristic-input" placeholder="Declare a new operational parameter..." value={newStageTitle} onChange={e => setNewStageTitle(e.target.value)} style={{ ...inputWellStyle, flexGrow: 1, minWidth: '250px' }} />
@@ -709,6 +740,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                       return (
                         <div key={st.id} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '16px', padding: '20px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            
                             <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', flexGrow: 1 }}>
                               <input type="checkbox" id={`st-${st.id}`} checked={st.isCompleted} onChange={() => handleToggleStage(st.id, st.isCompleted, isStageLocked)} disabled={isStageLocked} style={{ width: '20px', height: '20px', accentColor: '#bc69ff', marginTop: '2px', cursor: isStageLocked ? 'not-allowed' : 'pointer', flexShrink: 0 }} />
                               
@@ -747,6 +779,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                             )}
                           </div>
 
+                          {/* PHYSICAL FILE UPLOAD FOR STAGE */}
                           {activeAttachStageId === st.id && (
                             <form onSubmit={(e) => handleStageAttach(st.id, e, isStageLocked)} style={{ display: 'flex', gap: '8px', marginTop: '16px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
                               <input type="file" required onChange={e => setStageFile(e.target.files?.[0] || null)} style={{ ...inputWellStyle, flex: 1, padding: '10px' }} />
@@ -760,9 +793,11 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                 </div>
               )}
 
+              {/* TAB: FILES (WITH MAIN SUBMISSION INJECTED) */}
               {activeTab === 'files' && (
                 <div className="nav-scroll" style={{ flexGrow: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
                   
+                  {/* ADMIN MODULE: SUBMIT MAIN DELIVERABLE */}
                   {canSubmitMainFile && (
                     <div style={{ padding: '24px', background: 'rgba(22, 163, 74, 0.1)', border: '1px dashed rgba(22, 163, 74, 0.4)', borderRadius: '16px' }}>
                       <h4 style={{ margin: '0 0 12px 0', fontSize: '1rem', fontWeight: '900', color: '#86efac', textShadow: textGlow }}>[ FINAL ] SUBMIT FINAL DELIVERABLE</h4>
@@ -776,6 +811,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                     </div>
                   )}
 
+                  {/* FILE REPOSITORY GRID */}
                   <div>
                     <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', fontWeight: '900', color: '#ffffff', textShadow: textGlow }}>Repository Assets</h3>
                     {(!activeProject.attachments || activeProject.attachments.length === 0) ? (
@@ -808,6 +844,8 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                           
                           return (
                             <div key={file.id} onClick={() => setPreviewFile(file)} className="card-hover" style={{ ...glassyPanelStyle, padding: '24px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative', overflow: 'hidden' }}>
+                              
+                              {/* DELETE BUTTON */}
                               {myRole !== 'viewer' && (
                                 <button 
                                   onClick={(e) => handleDeleteAttachment(activeProject!.id, file.id, e)}
@@ -818,11 +856,15 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                                   ×
                                 </button>
                               )}
+
                               <div style={{ alignSelf: 'flex-start', fontSize: '0.65rem', fontWeight: '900', padding: '4px 10px', borderRadius: '99px', background: badgeBg, border: `1px solid ${badgeBorder}`, color: badgeColor, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                 {badgeText}
                               </div>
+
                               <div style={{ textAlign: 'center', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
-                                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: '#ffffff' }}>{iconText}</span>
+                                <span style={{ fontSize: '1.5rem', fontWeight: '900', color: '#ffffff' }}>
+                                  {iconText}
+                                </span>
                               </div>
                               <div style={{ textAlign: 'center' }}>
                                 <div style={{ color: '#ffffff', fontWeight: '900', fontSize: '0.9rem', wordBreak: 'break-word', textShadow: textGlow }}>{file.fileName}</div>
@@ -838,8 +880,11 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
             </div>
           )}
 
+          {/* RIGHT PANEL: PROGRESSIVE DISCLOSURE (ACCORDION) */}
           {activeProject && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', overflowY: 'auto' }} className="nav-scroll">
+              
+              {/* DEFAULT LAYER: Clean Information */}
               <div style={{ ...glassyPanelStyle, padding: '24px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                 <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', fontWeight: '900', color: '#ffffff', textShadow: textGlow }}>Matrix Parameters</h3>
                 
@@ -858,6 +903,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                   </div>
                 </div>
 
+                {/* SHARED WORKSPACE HOTLINK */}
                 {activeProject.attachments?.find((a:any) => a.fileType === 'shared_workspace') && (
                   <a href={activeProject.attachments.find((a:any) => a.fileType === 'shared_workspace').fileUrl} target="_blank" rel="noreferrer" style={{ display: 'block', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.9)', color: '#1e1b4b', fontWeight: '900', textAlign: 'center', textDecoration: 'none', fontSize: '0.8rem', marginBottom: '24px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                     [ LINK ] ACCESS SHARED WORKSPACE
@@ -892,12 +938,14 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                 </div>
               </div>
 
+              {/* EDITOR/VIEWER UNIVERSAL EXIT (Outside Accordion) */}
               {canLeaveWorkspace && (
                 <button onClick={handleLeaveWorkspace} style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.4)', color: '#fdba74', fontWeight: '900', cursor: 'pointer', transition: 'all 0.2s', textShadow: textGlow, backdropFilter: 'blur(16px)' }} onMouseOver={e=>e.currentTarget.style.background='rgba(249, 115, 22, 0.3)'} onMouseOut={e=>e.currentTarget.style.background='rgba(249, 115, 22, 0.15)'}>
                   Revoke My Access (Leave)
                 </button>
               )}
 
+              {/* HIDDEN LAYER: ADMINISTRATOR ACCORDION */}
               {isOwner || myRole === 'admin' ? (
                 <div style={{ ...glassyPanelStyle, overflow: 'hidden', transition: 'all 0.3s ease', display: 'flex', flexDirection: 'column' }}>
                   <button 
@@ -930,16 +978,22 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                   </div>
                 </div>
               ) : null}
+
             </div>
           )}
+
         </div>
       )}
 
+      {/* ========================================== */}
+      {/* NEW UI: SPLIT-PANE DEPLOYMENT MODAL        */}
+      {/* ========================================== */}
       {showNewTaskModal && ReactDOM.createPortal(
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(20, 5, 20, 0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px', boxSizing: 'border-box', fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
           
           <div className="modal-no-scroll" style={{ width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', background: 'linear-gradient(135deg, rgba(255, 117, 179, 0.25) 0%, rgba(188, 105, 255, 0.25) 100%)', backdropFilter: 'blur(28px) saturate(150%)', WebkitBackdropFilter: 'blur(28px) saturate(150%)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.4)', boxShadow: '0 24px 60px rgba(0, 0, 0, 0.3), inset 0 2px 10px rgba(255,255,255,0.3)', display: 'flex', flexDirection: 'column' }}>
             
+            {/* Modal Header */}
             <div style={{ padding: '24px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 12px #ffffff' }} />
@@ -948,7 +1002,10 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
               <button onClick={resetModalState} style={{ background: 'none', border: 'none', color: '#ffffff', fontSize: '2rem', cursor: 'pointer', opacity: 0.7, transition: 'transform 0.2s', padding: 0, lineHeight: 1 }} onMouseOver={e => e.currentTarget.style.transform = 'scale(1.2)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}>×</button>
             </div>
 
+            {/* Modal Body */}
             <div style={{ padding: '40px', display: 'flex', flexWrap: 'wrap', gap: '48px' }}>
+              
+              {/* Left Column: Core Identity */}
               <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 <div>
                   <input type="text" className="light-placeholder focus-glow" placeholder="Project Title..." value={newTitle} onChange={e => setNewTitle(e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid rgba(255,255,255,0.3)', color: '#ffffff', fontSize: '2.8rem', fontWeight: '900', outline: 'none', paddingBottom: '8px', textShadow: textGlow }} />
@@ -959,13 +1016,17 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                 </div>
               </div>
 
+              {/* Right Column: Advanced Parameters */}
               <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 <div style={{ background: 'rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '32px', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), 0 8px 24px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                  
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: '900', color: '#ffffff', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', textShadow: '0 2px 6px rgba(192, 132, 252, 0.4)' }}>Matrix Parameters</label>
+                  
                   <div>
                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '900', color: '#E8C1E2', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Shared Workspace URL</label>
                     <input type="url" className="light-placeholder focus-glow" value={newSharedUrl} onChange={e => setNewSharedUrl(e.target.value)} placeholder="Google Docs / SharePoint link..." style={{ ...inputWellStyle, width: '100%', boxSizing: 'border-box', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#ffffff', padding: '16px' }} />
                   </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '900', color: '#E8C1E2', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Threat Level</label>
@@ -981,10 +1042,12 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
                       <input type="datetime-local" className="focus-glow" value={newDueDate} onChange={e => setNewDueDate(e.target.value)} style={{ ...inputWellStyle, width: '100%', boxSizing: 'border-box', colorScheme: 'dark', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#ffffff', padding: '16px' }} />
                     </div>
                   </div>
+
                 </div>
               </div>
             </div>
 
+            {/* Modal Footer */}
             <div style={{ padding: '24px 40px', borderTop: '1px solid rgba(255,255,255,0.2)', display: 'flex', justifyContent: 'flex-end', gap: '16px' }}>
               <button onClick={resetModalState} style={{ padding: '12px 32px', borderRadius: '99px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.4)', color: '#fff', fontWeight: '900', fontSize: '0.9rem', cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleCreateCollabTask} disabled={taskLoading} style={{ padding: '12px 32px', borderRadius: '99px', background: '#ffffff', border: 'none', color: '#bc69ff', fontWeight: '900', fontSize: '0.9rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>Commit & Deploy Node</button>
@@ -995,6 +1058,7 @@ export function CollaborationHub({ currentUser }: CollaborationHubProps) {
         document.body
       )}
 
+      {/* INVITE MODAL OVERHAUL (SAKURA THEME) */}
       {showInviteModal && ReactDOM.createPortal(
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(20, 5, 20, 0.4)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999, padding: '20px', boxSizing: 'border-box', fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}>
           <div style={{ width: '100%', maxWidth: '480px', background: 'linear-gradient(135deg, rgba(255, 117, 179, 0.25) 0%, rgba(188, 105, 255, 0.25) 100%)', backdropFilter: 'blur(28px) saturate(150%)', WebkitBackdropFilter: 'blur(28px) saturate(150%)', borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.4)', boxShadow: '0 24px 60px rgba(0, 0, 0, 0.3), inset 0 2px 10px rgba(255,255,255,0.3)', display: 'flex', flexDirection: 'column' }}>
