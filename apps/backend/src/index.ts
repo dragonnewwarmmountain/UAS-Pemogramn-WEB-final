@@ -15,7 +15,6 @@ const app = express();
 // ==========================================
 // Database & Adapter Initialisation
 // ==========================================
-const dbUrl = (process.env.DATABASE_URL as string).replace('mysql://', 'mariadb://');
 
 const prisma = new PrismaClient({ });
 
@@ -546,10 +545,5 @@ app.put('/api/subtasks/:id/status', authenticateToken, async (req: Authenticated
 // ==========================================
 // INIT PELADEN
 // ==========================================
-app.listen(PORT, () => {
-  console.log(`\n========================================`);
-  console.log(`[Server] Ecosystem active and listening`);
-  console.log(`[Port]   http://localhost:${PORT}`);
-  console.log(`========================================\n`);
-});
+
 export default app;
