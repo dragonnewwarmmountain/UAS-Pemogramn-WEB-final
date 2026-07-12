@@ -27,6 +27,7 @@ export type ExtendedTask = Omit<BaseTask, 'priority' | 'difficulty' | 'status'> 
 
 const PLACEHOLDER_STAT_1 = "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&auto=format&fit=crop&q=80";
 const PLACEHOLDER_STAT_2 = "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&auto=format&fit=crop&q=80";
+const PLACEHOLDER_STAT_3 = "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&auto=format&fit=crop&q=80";
 
 const PRIORITY_WEIGHT: Record<PriorityLevel, number> = {
   critical: 4,
@@ -248,6 +249,15 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
   const handleInlineStatusChange = async (taskId: string, newStatus: string) => {
     try {
       if (newStatus === 'done') {
+         const task = tasks.find(t => t.id === taskId);
+         if (task && task.subTasks && task.subTasks.length > 0) {
+           const areAllSubsCompleted = task.subTasks.every((sub: any) => sub.isCompleted);
+           if (!areAllSubsCompleted) {
+             showToast("Dependency Lock: Complete all sub-tasks (stages) before archiving.", "error");
+             return;
+           }
+         }
+
          setTasks(prev => prev.filter(t => t.id !== taskId));
          if (inspectedTask?.id === taskId) setInspectedTask(null);
          showToast("Triumph Unlocked! Node instantly archived.", "success");
@@ -335,6 +345,17 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
   const handleRepoUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!repoTaskId || !repoFile) return;
+
+    if (repoFileType === 'main_submission') {
+      const task = tasks.find(t => t.id === repoTaskId);
+      if (task && task.subTasks && task.subTasks.length > 0) {
+        const areAllSubsCompleted = task.subTasks.every((sub: any) => sub.isCompleted);
+        if (!areAllSubsCompleted) {
+          showToast("Dependency Lock: Complete all sub-tasks (stages) before archiving with final deliverable.", "error");
+          return;
+        }
+      }
+    }
 
     const finalName = repoFileName.trim() || repoFile.name;
     const formData = new FormData();
@@ -515,10 +536,8 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
       <FloatingMessenger task={tasks.find(t => t.id === messengerTaskId) as any || null} onClose={() => setMessengerTaskId(null)} onUpdateTask={(updated: any) => setTasks(prev => prev.map(t => t.id === updated.id ? updated : t))} />
       <CreateTaskModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onAddTask={handleAddTask as any} />
 
-      {/* SYMMETRICAL 2-PILLAR STATS */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px', marginBottom: '24px' }}>
-        
-        {/* PILLAR 1: ACTIVE NODES */}
+      {/* SYMMETRICAL 3-PILLAR STATS */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '24px' }}>
         <div style={{ ...glassyPanelStyle, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', flexGrow: 1 }}>
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -531,7 +550,6 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
           </div>
         </div>
 
-        {/* PILLAR 2: CRITICAL THREATS */}
         <div style={{ ...glassyPanelStyle, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', flexGrow: 1 }}>
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -544,6 +562,17 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
           </div>
         </div>
 
+        <div style={{ ...glassyPanelStyle, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', flexGrow: 1 }}>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#E8C1E2', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', textShadow: textGlow }}>Overdue Trajectory</span>
+              <div style={{ fontSize: '3.5rem', fontWeight: '900', color: '#ffffff', lineHeight: '1', textShadow: textGlow }}>{stats.overdue}</div>
+            </div>
+            <div style={{ width: '100px', minWidth: '100px', clipPath: 'polygon(20% 0, 100% 0, 100% 100%, 0% 100%)' }}>
+              <img src={PLACEHOLDER_STAT_3} alt="Stat" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.8 }} />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '56px', alignItems: 'stretch' }}>
