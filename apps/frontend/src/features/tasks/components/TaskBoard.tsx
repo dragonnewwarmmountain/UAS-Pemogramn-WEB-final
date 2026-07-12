@@ -545,8 +545,7 @@ export function TaskBoard({ dashboardImageUrl = '/src/assets/your-custom-image.j
         <div style={{ ...glassyPanelStyle, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'stretch', flexGrow: 1 }}>
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#E8C1E2', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', textShadow: textGlow }}>Overdue Trajectory</span>
-              <div style={{ fontSize: '3.5rem', fontWeight: '900', color: '#ffffff', lineHeight: '1', textShadow: textGlow }}>{stats.overdue}</div>
+               <div style={{ fontSize: '3.5rem', fontWeight: '900', color: '#ffffff', lineHeight: '1', textShadow: textGlow }}>{stats.overdue}</div>
             </div>
             <div style={{ width: '100px', minWidth: '100px', clipPath: 'polygon(20% 0, 100% 0, 100% 100%, 0% 100%)' }}>
               <img src={PLACEHOLDER_STAT_3} alt="Stat" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: 0.8 }} />
