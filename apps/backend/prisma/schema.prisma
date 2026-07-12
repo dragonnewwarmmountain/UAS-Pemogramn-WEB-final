@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   // Konfigurasi URL mengikuti standar Prisma v7 (menggunakan prisma.config.ts atau env langsung)
 }
 
