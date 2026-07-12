@@ -1,7 +1,7 @@
 // apps/frontend/src/services/api.ts
 import type { TaskStatus } from '../features/tasks/types';
 
-const API_URL = 'https://backend-uas-sable.vercel.app';
+const API_URL = 'https://backend-uas-sable.vercel.app/api';
 
 // ==========================================
 // SECURITY UTILITY: JWT INJECTION
